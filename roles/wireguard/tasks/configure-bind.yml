@@ -1,0 +1,34 @@
+- name: Create a directory if they dont  exist
+  ansible.builtin.file:
+    path: "{{ item.path }}"
+    state: directory
+    owner: "{{ item.owner }}"
+    group: "{{ item.group }}"
+    mode: "0755"
+  with_items:
+    - { path: "/var/log/named", owner: "bind", group: "bind", mode: "0755" }
+
+- name: Bind config
+  block:
+    - name: generate server config file
+      ansible.builtin.template:
+        src: "{{ item.source }}"
+        dest: "{{ item.dest }}"
+      with_items:
+        - { source: "db.override.j2", dest: "/etc/bind/db.override" }
+
+    - name: copy config files
+      copy:
+        src: "{{ item.source }}"
+        dest: "{{ item.dest }}"
+      with_items:
+        - { source: "named.conf.default-zones", dest: "/etc/bind/named.conf.default-zones" }
+        - { source: "named.conf.options", dest: "/etc/bind/named.conf.options" }
+        - { source: "named", dest: "/etc/default/named" }
+
+    - name: populate root server db
+      shell: dig @A.ROOT-SERVERS.NET > /etc/bind/db.root
+
+    - name: set query order
+      shell: sed -i '1 i\order hosts,bind' /etc/host.conf
+  notify: Restart bind

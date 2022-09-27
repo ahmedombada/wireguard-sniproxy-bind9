@@ -1,0 +1,18 @@
+; BIND data file for overridden IPs
+;
+$TTL 86400
+@ IN SOA ns1 root (
+        2012100401 ; serial
+        604800 ; refresh 1w
+        86400 ; retry 1d
+        2419200 ; expiry 4w
+        86400 ; minimum TTL 1d
+        )
+; need at least a nameserver
+@ IN NS ns1
+; specify nameserver IP address
+ns1 IN A {{ ansible_default_ipv4.address }} ;external IP created for the VM
+; provide IP address for domain itself
+@ IN A {{ ansible_default_ipv4.address }} ;external IP created for the VM
+; resolve everything with the same IP address as ns1
+* IN A {{ ansible_default_ipv4.address }} ;external IP created for the VM

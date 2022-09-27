@@ -1,0 +1,66 @@
+- name: Create a directory if they dont  exist
+  ansible.builtin.file:
+    path: "{{ item.path }}"
+    state: directory
+    mode: "{{ item.mode }}"
+  with_items:
+    - { path: "/etc/wireguard", mode: "0600" }
+
+#TODO find a way to discover if files already exists
+- name: Gnerate private keys
+  shell: wg genkey > "{{ item }}"_private.key
+  args:
+    chdir: /etc/wireguard/
+  with_items:
+    - server
+    - client
+
+- name: Gnerate public keys
+  shell: wg pubkey <"{{ item.private_key_name }}"> "{{ item.output }}"
+  args:
+    chdir: /etc/wireguard/
+  with_items:
+    - { private_key_name: "server_private.key",  output: "server_public.key"}
+    - { private_key_name: "client_private.key",  output: "client_public.key"}
+
+
+- name: get public keys
+  shell: cat "{{ item }}"
+  args:
+    chdir: /etc/wireguard/
+  with_items:
+    - server_public.key
+    - client_public.key
+  register: public_keys
+
+- name: get private keys
+  shell: cat "{{ item }}"
+  args:
+    chdir: /etc/wireguard/
+  with_items:
+    - server_private.key
+    - client_private.key
+  register: private_keys
+
+- name: generate server config file
+  ansible.builtin.template:
+    src: "{{ item.source }}"
+    dest: "{{ item.dest }}"
+  vars:
+    - server_private_key: "{{ private_keys.results[0]['stdout'] }}"
+    - server_public_key: "{{ public_keys.results[0]['stdout']}}"
+    - client_private_key: "{{ private_keys.results[1]['stdout'] }}"
+    - client_public_key: "{{ public_keys.results[1]['stdout'] }}"
+  with_items:
+    - { source: "wg0.conf.j2", dest: "/etc/wireguard/wg0.conf" }
+    - { source: "wg-client0.conf.j2", dest: "/etc/wireguard/wg-client0.conf" }
+
+- ansible.posix.sysctl:
+    name: net.ipv4.ip_forward
+    value: '1'
+    sysctl_set: yes
+    state: present
+    reload: yes
+
+- name: configure iptables
+  shell: iptables -t nat -A POSTROUTING -s 10.10.10.0/24 -o "{{ ansible_default_ipv4.interface }}" -j MASQUERADE

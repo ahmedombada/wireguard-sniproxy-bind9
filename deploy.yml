@@ -1,0 +1,8 @@
+---
+- name: Deploy
+  hosts: wireguard
+  any_errors_fatal: true
+
+  tasks:
+    - import_role:
+        name: wireguard

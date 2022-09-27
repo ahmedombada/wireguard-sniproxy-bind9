@@ -1,0 +1,9 @@
+- name: Restart bind
+  ansible.builtin.service:
+    name: bind9
+    state: restarted
+
+- name: Restart sniproxy
+  ansible.builtin.service:
+    name: bind9
+    state: restarted

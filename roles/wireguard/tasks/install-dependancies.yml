@@ -1,0 +1,16 @@
+- name: get uname -r
+  shell: uname -r
+  register: output
+
+- name: Install packages
+  ansible.builtin.apt:
+    name: "{{ item }}"
+    state: present
+    update_cache: yes
+  with_items:
+    - wireguard
+    - wireguard-tools
+    - "linux-headers-{{ output.stdout_lines[0]}}"
+    - bind9
+    - iptables
+    - sniproxy

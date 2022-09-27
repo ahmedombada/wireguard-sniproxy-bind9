@@ -1,0 +1,7 @@
+- name: generate server config file
+  copy:
+    src: "{{ item.source }}"
+    dest: "{{ item.dest }}"
+  with_items:
+    - { source: "sniproxy.conf", dest: "/etc/sniproxy.conf" }
+  notify: Restart sniproxy

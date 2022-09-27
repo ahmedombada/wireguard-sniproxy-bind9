@@ -1,0 +1,23 @@
+options {
+	directory "/var/cache/bind";
+	//========================================================================
+	// If BIND logs error messages about the root key being expired,
+	// you will need to update your keys.  See https://www.isc.org/bind-keys
+	//========================================================================
+	dnssec-validation auto;
+	allow-query {127.0.0.1; 10.10.10.0/24;};
+	allow-recursion {127.0.0.1; 10.10.10.0/24;};
+	//listen-on-v6 { any; };
+
+};
+logging {
+	channel bind_log {
+		file "/var/log/named/named.log" versions 5 size 30m;
+		severity info;
+		print-time yes;
+		print-severity yes;
+		print-category yes;
+	};
+	category default { bind_log; };
+	category queries { bind_log; };
+};
