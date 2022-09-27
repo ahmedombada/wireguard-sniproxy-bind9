@@ -1,5 +1,5 @@
 ---
-#- include_tasks: install-dependancies.yml
+- include_tasks: install-dependancies.yml
 - include_tasks: configure-wireguard.yml
-#- include_tasks: configure-bind.yml
-#- include_tasks: configure-sni-proxy.yml
+- include_tasks: configure-bind.yml
+- include_tasks: configure-sni-proxy.yml
